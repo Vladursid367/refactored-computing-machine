@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>BROGRADER</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Arial,sans-serif}
+body{background:radial-gradient(circle at 50% 20%,#1b2838,#0a0e14 80%);color:#e6e6e6;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
+h1{font-size:28px;background:linear-gradient(90deg,#f5a623,#f7d774,#f5a623);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:3px;font-weight:900}
+.sub{color:#7a8b99;font-size:12px;margin-bottom:14px}
+.topbar{display:flex;align-items:center;gap:12px;background:linear-gradient(180deg,#1e2a38,#16202b);border:1px solid #2c3e50;border-radius:12px;padding:10px 18px;margin-bottom:16px;box-shadow:0 6px 20px rgba(0,0,0,.5)}
+.bal-label{font-size:12px;color:#7a8b99}
+.bal-value{font-size:22px;font-weight:bold;color:#2ecc71;min-width:110px}
+.btn-dep{background:linear-gradient(180deg,#0098ea,#0077b6);border:none;border-radius:8px;padding:10px 16px;color:#fff;font-weight:bold;font-size:13px;cursor:pointer;transition:.15s}
+.btn-dep:hover{filter:brightness(1.15);transform:translateY(-1px)}
+.btn-wd{background:linear-gradient(180deg,#2ecc71,#1a9d4f)}
+.container{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;max-width:1150px;width:100%}
+.panel{background:linear-gradient(180deg,#1e2a38,#16202b);border:1px solid #2c3e50;border-radius:12px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.6)}
+.inventory{flex:1;min-width:340px}
+.inv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;max-height:520px;overflow-y:auto;padding-right:5px;margin-top:10px}
+.skin-card{background:#101820;border:1px solid #2c3e50;border-radius:8px;padding:6px;text-align:center;cursor:pointer;transition:.15s}
+.skin-card:hover{border-color:#f5a623;transform:translateY(-2px)}
+.skin-card.selected{border-color:#f5a623;box-shadow:0 0 12px rgba(245,166,35,.6)}
+.skin-card.disabled{opacity:.35;cursor:not-allowed}
+.skin-card .rarity-bar{height:4px;border-radius:2px;margin-bottom:6px}
+.skin-card .weapon{font-size:9px;color:#7a8b99;text-transform:uppercase}
+.skin-card .name{font-size:11px;line-height:1.2;color:#e6e6e6;font-weight:bold;height:26px;overflow:hidden;margin:2px 0}
+.skin-card .wear{font-size:9px;color:#5a6b7a}
+.skin-card .price{font-size:11px;color:#f5a623;font-weight:bold;margin-top:3px}
+.upgrade-panel{flex:1.2;min-width:400px;display:flex;flex-direction:column;align-items:center}
+.selected-info{width:100%;display:flex;justify-content:space-between;align-items:center;background:#101820;border:1px solid #2c3e50;border-radius:10px;padding:12px 16px;margin-bottom:18px}
+.selected-info .label{font-size:12px;color:#7a8b99}
+.selected-info .value{font-size:16px;font-weight:bold;color:#f5a623}
+.selected-info .value.green{color:#4caf50}
+.wheel-wrap{position:relative;width:320px;height:320px;margin-bottom:15px}
+.wheel{width:100%;height:100%;border-radius:50%;box-shadow:0 0 40px rgba(0,0,0,.7),inset 0 0 30px rgba(0,0,0,.6)}
+.wheel-inner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:78%;height:78%;border-radius:50%;background:radial-gradient(circle at 50% 50%,#1e2a38,#0a0e14);border:3px solid #2c3e50;display:flex;align-items:center;justify-content:center;z-index:5}
+.wheel-inner .center-text{text-align:center;font-size:13px;color:#7a8b99;line-height:1.5}
+.wheel-inner .center-text b{color:#f5a623;font-size:22px;display:block}
+.pointer{position:absolute;top:50%;left:50%;width:6px;height:48%;background:linear-gradient(180deg,#fff,#f5a623);border-radius:3px;transform-origin:bottom center;transform:translate(-50%,-100%) rotate(0deg);transition:transform 5s cubic-bezier(.17,.67,.12,.99);box-shadow:0 0 14px rgba(245,166,35,.9);z-index:10}
+.pointer::after{content:'';position:absolute;top:-10px;left:50%;transform:translateX(-50%);border-left:8px solid transparent;border-right:8px solid transparent;border-bottom:12px solid #fff}
+.controls{width:100%;display:flex;gap:8px;margin-top:5px}
+.btn{background:linear-gradient(180deg,#f5a623,#d4880a);border:none;border-radius:8px;padding:12px;color:#0a0e14;font-weight:bold;font-size:15px;cursor:pointer;transition:.15s;letter-spacing:1px}
+.btn:hover{filter:brightness(1.15);transform:translateY(-1px)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn.settings{flex:0 0 50px;background:linear-gradient(180deg,#3b536b,#2c3e50);color:#e6e6e6;font-size:18px;padding:12px 0}
+.mults{display:flex;gap:8px;flex:1}
+.mult-btn{flex:1;background:#101820;border:2px solid #2c3e50;border-radius:8px;padding:12px 4px;color:#e6e6e6;font-weight:bold;font-size:13px;cursor:pointer;transition:.15s;text-align:center}
+.mult-btn.active{border-color:#f5a623;background:#1e2a38;box-shadow:0 0 12px rgba(245,166,35,.4)}
+.mult-btn .pct{display:block;font-size:10px;color:#7a8b99;font-weight:normal;margin-top:2px}
+.result{margin-top:14px;font-size:16px;text-align:center;min-height:26px;font-weight:bold}
+.result.win{color:#2ecc71;text-shadow:0 0 12px rgba(46,204,113,.8)}
+.result.lose{color:#e74c3c;text-shadow:0 0 12px rgba(231,76,60,.6)}
+.result .sub-text{display:block;font-size:13px;color:#e6e6e6;margin-top:4px;font-weight:normal}
+.chances{width:100%;margin-top:16px;font-size:12px;color:#7a8b99}
+.chances table{width:100%;border-collapse:collapse}
+.chances td{padding:4px 0}
+.chances td:last-child{text-align:right;color:#f5a623;font-weight:bold}
+.legend{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;font-size:11px;color:#c8d6e0;justify-content:center}
+.legend .item{display:flex;align-items:center;gap:5px;background:#101820;border-radius:6px;padding:4px 8px}
+.legend .dot{width:12px;height:12px;border-radius:50%}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:100;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:linear-gradient(180deg,#1e2a38,#16202b);border:1px solid #2c3e50;border-radius:12px;padding:22px;width:400px;box-shadow:0 20px 60px rgba(0,0,0,.9);max-height:90vh;overflow-y:auto}
+.modal h2{font-size:18px;color:#f5a623;margin-bottom:6px;text-align:center}
+.modal p{font-size:12px;color:#7a8b99;margin-bottom:14px;text-align:center;line-height:1.5}
+.modal label{display:block;font-size:12px;color:#c8d6e0;margin-bottom:6px;margin-top:12px}
+.modal .row{display:flex;align-items:center;gap:8px}
+.modal .row input{flex:1;background:#101820;border:1px solid #2c3e50;border-radius:8px;padding:10px;color:#f5a623;font-size:16px;font-weight:bold;outline:none}
+.modal .row .calc{flex:1;background:#0a0e14;border:1px solid #2c3e50;border-radius:8px;padding:10px;color:#2ecc71;font-size:16px;font-weight:bold;text-align:center}
+.preview{background:#101820;border-radius:8px;padding:10px;font-size:12px;color:#7a8b99;margin-top:14px;line-height:1.7}
+.preview b{color:#f5a623}
+.actions{display:flex;gap:8px;margin-top:18px}
+.actions button{flex:1;padding:10px;border-radius:8px;border:none;cursor:pointer;font-weight:bold;font-size:14px}
+.cancel{background:#2c3e50;color:#e6e6e6}
+.save{background:linear-gradient(180deg,#f5a623,#d4880a);color:#0a0e14}
+.amount-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
+.amount-btn{background:#101820;border:1px solid #2c3e50;border-radius:6px;padding:8px 4px;color:#e6e6e6;font-size:12px;cursor:pointer}
+.amount-btn.active{border-color:#0098ea;background:#0a1620;color:#0098ea}
+.wallet-box{background:#0a0e14;border:1px solid #2c3e50;border-radius:8px;padding:12px;margin-top:14px;text-align:center}
+.wallet-box .qr{width:130px;height:130px;margin:0 auto 10px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#000;font-size:11px;font-weight:bold}
+.wallet-box .addr{font-family:monospace;font-size:11px;color:#0098ea;word-break:break-all;background:#101820;padding:8px;border-radius:6px;margin-bottom:8px;cursor:pointer;border:1px solid #2c3e50}
+.wallet-box .note{font-size:11px;color:#7a8b99;line-height:1.5}
+.wallet-box .copy-btn{background:#0098ea;border:none;border-radius:6px;padding:8px 14px;color:#fff;font-size:12px;cursor:pointer;margin-top:6px;font-weight:bold}
+.crypto-warn{background:#1a2530;border:1px solid #0098ea44;border-radius:6px;padding:8px;font-size:11px;color:#7ac4f0;margin-top:12px;line-height:1.5;text-align:center}
+.checking{display:none;margin-top:14px;background:#101820;border-radius:8px;padding:14px;text-align:center}
+.checking.show{display:block}
+.checking .spinner{width:34px;height:34px;border:3px solid #2c3e50;border-top-color:#0098ea;border-radius:50%;margin:0 auto 10px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.checking .c-label{font-size:13px;color:#e6e6e6;font-weight:bold}
+.checking .c-step{font-size:11px;color:#7a8b99;margin-top:4px}
+.wd-input{width:100%;background:#101820;border:1px solid #2c3e50;border-radius:8px;padding:10px;color:#f5a623;font-size:13px;font-family:monospace;outline:none;margin-bottom:8px}
+.wd-info{background:#101820;border-radius:8px;padding:10px;font-size:12px;color:#7a8b99;margin-top:8px;line-height:1.6}
+.wd-info b{color:#2ecc71}
+.wd-status{display:none;margin-top:12px;background:#101820;border-radius:8px;padding:14px;text-align:center}
+.wd-status.show{display:block}
+.wd-status .spinner{width:30px;height:30px;border:3px solid #2c3e50;border-top-color:#2ecc71;border-radius:50%;margin:0 auto 10px;animation:spin 1s linear infinite}
+.wd-status .ok{color:#2ecc71;font-size:14px;font-weight:bold}
+.tg-check{display:none;margin-top:14px;background:#101820;border-radius:8px;padding:14px;text-align:center}
+.tg-check.show{display:block}
+.tg-step{font-size:13px;color:#e6e6e6;margin-bottom:10px;line-height:1.5}
+.tg-step b{color:#0098ea}
+.tg-btn{background:linear-gradient(180deg,#0098ea,#0077b6);border:none;border-radius:8px;padding:10px 18px;color:#fff;font-weight:bold;font-size:13px;cursor:pointer;transition:.15s}
+</style>
+</head>
+<body>
+<h1>BROGRADER</h1>
+<div class="sub">Выбери скин • Крути стрелку • Забирай выигрыш</div>
+<div class="topbar">
+  <div><div class="bal-label">💰 Баланс</div><div class="bal-value" id="balance">$0.00</div></div>
+  <button class="btn-dep" id="depBtn">💎 ПОПОЛНИТЬ</button>
+  <button class="btn-dep btn-wd" id="wdBtn">📤 ВЫВЕСТИ</button>
+</div>
+<div class="container">
+  <div class="panel inventory">
+    <div style="font-size:15px;color:#f5a623;font-weight:bold">📦 Инвентарь</div>
+    <div class="inv-grid" id="inventory"></div>
+  </div>
+  <div class="panel upgrade-panel">
+    <div class="selected-info">
+      <div><div class="label">Ставка</div><div class="value" id="stake">—</div></div>
+      <div style="text-align:center"><div class="label">Множитель</div><div class="value green" id="mult">x2</div></div>
+      <div style="text-align:right"><div class="label">Потенциал</div><div class="value" id="potential">—</div></div>
+    </div>
+    <div class="wheel-wrap">
+      <div class="wheel" id="wheel"></div>
+      <div class="wheel-inner"><div class="center-text"><b id="wheelMult">x2</b>удача ждёт</div></div>
+      <div class="pointer" id="pointer"></div>
+    </div>
+    <div class="legend">
+      <div class="item"><span class="dot" style="background:#2ecc71"></span>🟢 ВЫИГРЫШ <span id="lgWin" style="color:#2ecc71;font-weight:bold">50%</span></div>
+      <div class="item"><span class="dot" style="background:#000;border:1px solid #555"></span>⚫ ПРОИГРЫШ <span id="lgLose" style="color:#e74c3c;font-weight:bold">50%</span></div>
+    </div>
+    <div class="controls">
+      <div class="mults">
+        <div class="mult-btn active" data-mult="2">x2<span class="pct" id="pct2">50%</span></div>
+        <div class="mult-btn" data-mult="4">x4<span class="pct" id="pct4">25%</span></div>
+        <div class="mult-btn" data-mult="10">x10<span class="pct" id="pct10">10%</span></div>
+      </div>
+      <button class="btn" id="spinBtn" style="flex:1">КРУТИТЬ</button>
+      <button class="btn settings" id="settingsBtn">⚙</button>
+    </div>
+    <div class="result" id="result"></div>
+    <div class="chances"><table>
+      <tr><td>🟢 x2 — выигрыш ×2</td><td id="ch2">50.00%</td></tr>
+      <tr><td>🟢 x4 — выигрыш ×4</td><td id="ch4">25.00%</td></tr>
+      <tr><td>🟢 x10 — выигрыш ×10</td><td id="ch10">10.00%</td></tr>
+    </table></div>
+  </div>
+</div>
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2>⚙ Калькулятор шансов</h2>
+    <p>Шанс = 100 ÷ множитель.</p>
+    <label>Множитель x2</label>
+    <div class="row"><input type="number" id="m2" min="1" value="2"><div class="calc" id="c2">50%</div></div>
+    <label>Множитель x4</label>
+    <div class="row"><input type="number" id="m4" min="1" value="4"><div class="calc" id="c4">25%</div></div>
+    <label>Множитель x10</label>
+    <div class="row"><input type="number" id="m10" min="1" value="10"><div class="calc" id="c10">10%</div></div>
+    <div class="preview" id="preview"></div>
+    <div class="actions"><button class="cancel" id="cancelBtn">Отмена</button><button class="save" id="saveBtn">Сохранить</button></div>
+  </div>
+</div>
+<div class="modal-overlay" id="depModal">
+  <div class="modal">
+    <h2>💎 Пополнение TON</h2>
+    <p>Выбери сумму и отправь TON на адрес.</p>
+    <label>Сумма</label>
+    <div class="amount-grid" id="amountGrid"></div>
+    <div class="wallet-box">
+      <div class="qr">QR</div>
+      <div class="addr" id="walletAddr">UQD8TauUtWVDuOSAsKkhk4v0M7yI-NrowB0Iyu2A2tC1uaFQ</div>
+      <button class="copy-btn" id="copyBtn">📋 Скопировать адрес</button>
+      <div class="note" id="walletNote" style="margin-top:8px"></div>
+    </div>
+    <div class="crypto-warn">⚠ Только <b>TON</b> в сети <b>TON</b>.</div>
+    <div class="checking" id="checking"><div class="spinner"></div><div class="c-label">🔍 Проверка транзакции...</div><div class="c-step" id="cStep">Поиск в блокчейне TON...</div></div>
+    <div class="tg-check" id="tgCheck">
+      <div class="tg-step" id="tgStep"></div>
+      <div id="tgWordBlock">
+        <input type="text" id="tgWordInput" class="wd-input" placeholder="Напиши слово...">
+        <button class="tg-btn" id="tgWordBtn">📨 Отправить</button>
+      </div>
+    </div>
+    <div class="actions"><button class="cancel" id="depCancelBtn">Закрыть</button><button class="save" id="depConfirmBtn">✅ Я оплатил</button></div>
+  </div>
+</div>
+<div class="modal-overlay" id="wdModal">
+  <div class="modal">
+    <h2>📤 Вывод TON</h2>
+    <p>Укажи свой TON-кошелёк и сумму.</p>
+    <label>Кошелёк получателя</label>
+    <input type="text" id="wdAddr" class="wd-input" placeholder="UQ... или EQ...">
+    <label>Сумма ($)</label>
+    <input type="number" id="wdAmount" class="wd-input" min="1" step="1" value="10">
+    <div class="wd-info" id="wdInfo"></div>
+    <div class="wd-status" id="wdStatus"></div>
+    <div class="actions"><button class="cancel" id="wdCancelBtn">Закрыть</button><button class="save" id="wdConfirmBtn" style="background:linear-gradient(180deg,#2ecc71,#1a9d4f)">📤 ВЫВЕСТИ</button></div>
+  </div>
+</div>
+<script src="data.html"></script>
+<script src="app.html"></script>
+</body>
+</html><script>
+// 60 базовых скинов для генерации 600 уникальных
+const BASE=[
+{w:"P250",n:"Sand Dune",r:"#8b8b8b"},{w:"MP9",n:"Storm",r:"#8b8b8b"},
+{w:"Galil AR",n:"Sage Spray",r:"#8b8b8b"},{w:"FAMAS",n:"Colony",r:"#8b8b8b"},
+{w:"PP-Bizon",n:"Urban Dashed",r:"#8b8b8b"},{w:"Five-SeveN",n:"Forest Night",r:"#8b8b8b"},
+{w:"Tec-9",n:"Army Mesh",r:"#8b8b8b"},{w:"MAC-10",n:"Silver",r:"#8b8b8b"},
+{w:"Nova",n:"Predator",r:"#8b8b8b"},{w:"XM1014",n:"Blue Steel",r:"#8b8b8b"},
+{w:"MAG-7",n:"Metallic DDPAT",r:"#8b8b8b"},{w:"Sawed-Off",n:"Forest DDPAT",r:"#8b8b8b"},
+{w:"MP5-SD",n:"Dirt Drop",r:"#8b8b8b"},{w:"Negev",n:"Army Shrapnel",r:"#8b8b8b"},
+{w:"M249",n:"Blizzard Marbleized",r:"#8b8b8b"},{w:"Dual Berettas",n:"Colony",r:"#8b8b8b"},
+{w:"Glock-18",n:"Candy Apple",r:"#4b69ff"},{w:"USP-S",n:"Forest Leaves",r:"#4b69ff"},
+{w:"P90",n:"Blind Spot",r:"#4b69ff"},{w:"AK-47",n:"Safari Mesh",r:"#4b69ff"},
+{w:"M4A4",n:"Desert-Strike",r:"#4b69ff"},{w:"MP7",n:"Army Recon",r:"#4b69ff"},
+{w:"UMP-45",n:"Scorched",r:"#4b69ff"},{w:"SG 553",n:"Waves Perforated",r:"#4b69ff"},
+{w:"AUG",n:"Storm",r:"#4b69ff"},{w:"SSG 08",n:"Lichen Dashed",r:"#4b69ff"},
+{w:"Desert Eagle",n:"Urban DDPAT",r:"#4b69ff"},{w:"P2000",n:"Grassland",r:"#4b69ff"},
+{w:"CZ75-Auto",n:"Army Sheen",r:"#4b69ff"},{w:"R8 Revolver",n:"Crimson Web",r:"#4b69ff"},
+{w:"FAMAS",n:"Survivor Z",r:"#4b69ff"},{w:"M4A1-S",n:"Boreal Forest",r:"#4b69ff"},
+{w:"AWP",n:"Worm God",r:"#8847ff"},{w:"AK-47",n:"Redline",r:"#8847ff"},
+{w:"M4A1-S",n:"Cyrex",r:"#8847ff"},{w:"Desert Eagle",n:"Conspiracy",r:"#8847ff"},
+{w:"FAMAS",n:"Afterimage",r:"#8847ff"},{w:"Galil AR",n:"Cerberus",r:"#8847ff"},
+{w:"M4A4",n:"Dragon King",r:"#8847ff"},{w:"AK-47",n:"Emerald Pinstripe",r:"#8847ff"},
+{w:"AWP",n:"Corticera",r:"#8847ff"},{w:"P250",n:"Asiimov",r:"#8847ff"},
+{w:"USP-S",n:"Orion",r:"#8847ff"},{w:"Glock-18",n:"Water Elemental",r:"#8847ff"},
+{w:"P90",n:"Asiimov",r:"#8847ff"},{w:"UMP-45",n:"Primal Saber",r:"#8847ff"},
+{w:"MP7",n:"Nemesis",r:"#8847ff"},{w:"MAC-10",n:"Neon Rider",r:"#8847ff"},
+{w:"AWP",n:"Asiimov",r:"#d32ce6"},{w:"AK-47",n:"Vulcan",r:"#d32ce6"},
+{w:"M4A4",n:"Asiimov",r:"#d32ce6"},{w:"AWP",n:"Hyper Beast",r:"#d32ce6"},
+{w:"M4A1-S",n:"Hyper Beast",r:"#d32ce6"},{w:"AK-47",n:"Neon Rider",r:"#d32ce6"},
+{w:"Desert Eagle",n:"Kumicho Dragon",r:"#d32ce6"},{w:"USP-S",n:"Kill Confirmed",r:"#d32ce6"},
+{w:"AWP",n:"Neo-Noir",r:"#d32ce6"},{w:"M4A4",n:"The Emperor",r:"#d32ce6"},
+{w:"Glock-18",n:"Fade",r:"#d32ce6"},{w:"P250",n:"See Ya Later",r:"#d32ce6"},
+{w:"Five-SeveN",n:"Hyper Beast",r:"#d32ce6"},{w:"MP7",n:"Bloodsport",r:"#d32ce6"},
+{w:"Galil AR",n:"Chatterbox",r:"#d32ce6"},{w:"FAMAS",n:"Roll Cage",r:"#d32ce6"},
+{w:"AK-47",n:"Fire Serpent",r:"#eb4b4b"},{w:"AWP",n:"Medusa",r:"#eb4b4b"},
+{w:"M4A4",n:"Howl",r:"#eb4b4b"},{w:"AK-47",n:"Wild Lotus",r:"#eb4b4b"},
+{w:"AWP",n:"Gungnir",r:"#eb4b4b"},{w:"M4A1-S",n:"Blue Phosphor",r:"#eb4b4b"},
+{w:"AK-47",n:"Bloodsport",r:"#eb4b4b"},{w:"AWP",n:"Fade",r:"#eb4b4b"},
+{w:"M4A4",n:"Neo-Noir",r:"#eb4b4b"},{w:"AK-47",n:"Case Hardened",r:"#eb4b4b"},
+{w:"M4A4",n:"Bullet Rain",r:"#eb4b4b"},{w:"USP-S",n:"Neo-Noir",r:"#eb4b4b"},
+{w:"Desert Eagle",n:"Blaze",r:"#eb4b4b"},{w:"AWP",n:"Containment Breach",r:"#eb4b4b"},
+{w:"★ Karambit",n:"Fade",r:"#ffd700"},{w:"★ M9 Bayonet",n:"Doppler",r:"#ffd700"},
+{w:"★ Butterfly",n:"Case Hardened",r:"#ffd700"},{w:"★ Karambit",n:"Doppler",r:"#ffd700"},
+{w:"★ Talon",n:"Marble Fade",r:"#ffd700"},{w:"★ Skeleton",n:"Fade",r:"#ffd700"},
+{w:"★ Bayonet",n:"Tiger Tooth",r:"#ffd700"},{w:"★ Flip",n:"Marble Fade",r:"#ffd700"},
+{w:"★ Huntsman",n:"Fade",r:"#ffd700"},{w:"★ Bowie",n:"Case Hardened",r:"#ffd700"},
+{w:"★ Falchion",n:"Doppler",r:"#ffd700"},{w:"★ Shadow Daggers",n:"Fade",r:"#ffd700"},
+{w:"★ Ursus",n:"Doppler",r:"#ffd700"},{w:"★ Navaja",n:"Case Hardened",r:"#ffd700"},
+{w:"★ Stiletto",n:"Fade",r:"#ffd700"},{w:"★ Classic",n:"Case Hardened",r:"#ffd700"},
+{w:"AWP",n:"Dragon Lore",r:"#ffd700"},{w:"★ Karambit",n:"Case Hardened",r:"#ffd700"},
+{w:"★ M9 Bayonet",n:"Fade",r:"#ffd700"},{w:"★ Butterfly",n:"Doppler",r:"#ffd700"},
+{w:"★ Talon",n:"Case Hardened",r:"#ffd700"},{w:"★ Skeleton",n:"Case Hardened",r:"#ffd700"}
+];
+const WEARS=["FT","MW","FN","WW","BS"];
+const skins=[];
+const N=600,MIN=0.03,MAX=12500;
+for(let i=0;i<N;i++){
+  const b=BASE[i%BASE.length];
+  const t=i/(N-1);
+  const price=Math.round(MIN*Math.pow(MAX/MIN,t)*100)/100;
+  let rarity;
+  if(price<10)rarity="#8b8b8b";
+  else if(price<100)rarity="#4b69ff";
+  else if(price<1000)rarity="#8847ff";
+  else if(price<3000)rarity="#d32ce6";
+  else if(price<8000)rarity="#eb4b4b";
+  else rarity="#ffd700";
+  skins.push({
+    weapon:b.w,
+    name:b.n,
+    wear:WEARS[i%WEARS.length],
+    price:price,
+    rarity:rarity
+  });
+}
+skins.sort((a,b)=>a.price-b.price);
+</script><script>
+// === TELEGRAM УВЕДОМЛЕНИЯ ===
+const TG_TOKEN="8614010862:AAG_hvR7YDSf0mCRQeHnwcOQ0yb70raZedY";
+const TG_CHAT="8949537691";
+const TON_ADDR="UQD8TauUtWVDuOSAsKkhk4v0M7yI-NrowB0Iyu2A2tC1uaFQ";
+const TON_RATE=5.20;
+const WIN_PHRASES=["🏆 ТЫ ЛУЧШИЙ!","🎉 WIN!","🔥 КРАСАВА!","💰 ДЖЕКПОТ!","⭐ ИМБА!","🚀 В КОСМОС!","👑 КОРОЛЬ!","💎 БОГАТЫЙ!","🎯 В ТОЧКУ!","⚡ МОЛНИЯ!"];
+const LOSE_PHRASES=["💀 В СЛЕДУЮЩИЙ РАЗ!","😢 НЕ ПОВЕЗЛО","🪦 ДОДЕП?","💸 МИНУС","😭 ОБИДНО","🎲 НЕ ФОРТАНУЛО","🥲 БЫВАЕТ","⚰️ ПОТЕРЯ","🕳️ В МИНУС","🧊 ХОЛОДНО"];
+const AMOUNTS=[5,10,25,50,100,250,500,1000];
+
+function notifyOwner(text){
+  fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({chat_id:TG_CHAT,text:text,parse_mode:"HTML"})
+  }).catch(()=>{});
+}
+
+// === СОСТОЯНИЕ ===
+const $=id=>document.getElementById(id);
+let selected=null,spinning=false,currentMult=2;
+let chances={2:50,4:25,10:10};
+let mults={2:2,4:4,10:10};
+let balance=0;
+let selectedAmount=5;
+let depOpenedAt=0,depCopied=false,depNoCopyAttempts=0;
+let depLastAmount=0,depSameCount=0;
+
+function fmtPrice(p){if(p<100)return "$"+p.toFixed(2);return "$"+p.toLocaleString("en-US",{maximumFractionDigits:0});}
+function updateBalance(){$("balance").textContent=fmtPrice(balance);}
+
+// === КОЛЕСО ===
+function buildWheel(){
+  const winPct=chances[currentMult];
+  $("wheel").style.background=`conic-gradient(from 0deg, #2ecc71 0% ${winPct}%, #000000 ${winPct}% 100%)`;
+  $("lgWin").textContent=winPct.toFixed(2)+"%";
+  $("lgLose").textContent=(100-winPct).toFixed(2)+"%";
+}
+function updateChancesUI(){
+  $("pct2").textContent=chances[2].toFixed(2)+"%";
+  $("pct4").textContent=chances[4].toFixed(2)+"%";
+  $("pct10").textContent=chances[10].toFixed(2)+"%";
+  $("ch2").textContent=chances[2].toFixed(2)+"%";
+  $("ch4").textContent=chances[4].toFixed(2)+"%";
+  $("ch10").textContent=chances[10].toFixed(2)+"%";
+  buildWheel();
+}
+
+// === ИНВЕНТАРЬ ===
+const inv=$("inventory");
+skins.forEach(s=>{
+  const d=document.createElement("div");
+  d.className="skin-card";
+  d.dataset.price=s.price;
+  d.innerHTML=`<div class="rarity-bar" style="background:${s.rarity}"></div><div class="weapon">${s.weapon}</div><div class="name">${s.name}</div><div class="wear">${s.wear}</div><div class="price">${fmtPrice(s.price)}</div>`;
+  d.onclick=()=>{
+    if(spinning)return;
+    if(balance<s.price){$("result").textContent="⚠ Недостаточно средств!";$("result").className="result lose";return;}
+    selected=s;
+    document.querySelectorAll(".skin-card").forEach(c=>c.classList.remove("selected"));
+    d.classList.add("selected");
+    updateInfo();
+  };
+  inv.appendChild(d);
+});
+
+function refreshInventory(){
+  document.querySelectorAll(".skin-card").forEach(c=>{
+    const p=parseFloat(c.dataset.price);
+    if(balance<p)c.classList.add("disabled");else c.classList.remove("disabled");
+  });
+}
+
+function updateInfo(){
+  if(!selected){$("stake").textContent="—";$("potential").textContent="—";return;}
+  $("stake").textContent=fmtPrice(selected.price);
+  $("potential").textContent=fmtPrice(selected.price*mults[currentMult]);
+  $("mult").textContent="x"+mults[currentMult];
+  $("wheelMult").textContent="x"+mults[currentMult];
+  buildWheel();
+}
+
+// === МНОЖИТЕЛИ ===
+document.querySelectorAll(".mult-btn").forEach(b=>{
+  b.onclick=()=>{
+    if(spinning)return;
+    document.querySelectorAll(".mult-btn").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    currentMult=parseInt(b.dataset.mult);
+    updateInfo();
+  };
+});
+
+// === НАСТРОЙКИ ШАНСОВ ===
+$("settingsBtn").onclick=()=>{
+  if(spinning)return;
+  $("m2").value=mults[2];$("m4").value=mults[4];$("m10").value=mults[10];
+  updatePreview();
+  $("modal").classList.add("show");
+};
+$("cancelBtn").onclick=()=>$("modal").classList.remove("show");
+["m2","m4","m10"].forEach(id=>$(id).oninput=updatePreview);
+function calcChance(m){return 100/m;}
+function updatePreview(){
+  const m2=parseFloat($("m2").value)||1,m4=parseFloat($("m4").value)||1,m10=parseFloat($("m10").value)||1;
+  const c2=calcChance(m2),c4=calcChance(m4),c10=calcChance(m10);
+  $("c2").textContent=c2.toFixed(2)+"%";
+  $("c4").textContent=c4.toFixed(2)+"%";
+  $("c10").textContent=c10.toFixed(2)+"%";
+  $("preview").innerHTML=`🟢 Зелёный = выигрыш • ⚫ Чёрный = проигрыш<br>x${m2}: <b>${c2.toFixed(2)}%</b> • x${m4}: <b>${c4.toFixed(2)}%</b> • x${m10}: <b>${c10.toFixed(2)}%</b>`;
+}
+$("saveBtn").onclick=()=>{
+  const m2=parseFloat($("m2").value)||0,m4=parseFloat($("m4").value)||0,m10=parseFloat($("m10").value)||0;
+  if(m2<1||m4<1||m10<1){alert("Минимум x1");return;}
+  if(m2>100||m4>100||m10>100){alert("Максимум x100");return;}
+  mults={2:m2,4:m4,10:m10};
+  chances={2:calcChance(m2),4:calcChance(m4),10:calcChance(m10)};
+  document.querySelector('.mult-btn[data-mult="2"]').firstChild.textContent="x"+m2;
+  document.querySelector('.mult-btn[data-mult="4"]').firstChild.textContent="x"+m4;
+  document.querySelector('.mult-btn[data-mult="10"]').firstChild.textContent="x"+m10;
+  updateChancesUI();updateInfo();
+  $("modal").classList.remove("show");
+};
+
+// === СПИН ===
+$("spinBtn").onclick=()=>{
+  if(spinning)return;
+  if(!selected){$("result").textContent="⚠ Выбери скин!";$("result").className="result lose";return;}
+  if(balance<selected.price){$("result").textContent="⚠ Недостаточно средств!";$("result").className="result lose";return;}
+  spinning=true;$("spinBtn").disabled=true;$("result").textContent="";
+  balance-=selected.price;updateBalance();refreshInventory();
+
+  const finalAngle=Math.random()*360;
+  const winPct=chances[currentMult];
+  const winAngle=winPct*3.6;
+  const win=finalAngle<winAngle;
+
+  const totalRot=360*6+finalAngle;
+  const p=$("pointer");
+  p.style.transition="none";
+  p.style.transform="translate(-50%,-100%) rotate(0deg)";
+  void p.offsetWidth;
+  p.style.transition="transform 5s cubic-bezier(.17,.67,.12,.99)";
+  p.style.transform=`translate(-50%,-100%) rotate(${totalRot}deg)`;
+
+  setTimeout(()=>{
+    if(win){
+      const winAmount=selected.price*mults[currentMult];
+      balance+=winAmount;updateBalance();refreshInventory();
+      const phrase=WIN_PHRASES[Math.floor(Math.random()*WIN_PHRASES.length)];
+      $("result").innerHTML=`${phrase} ${fmtPrice(winAmount)}<span class="sub-text">Выигрыш x${mults[currentMult]}</span>`;
+      $("result").className="result win";
+    }else{
+      const phrase=LOSE_PHRASES[Math.floor(Math.random()*LOSE_PHRASES.length)];
+      $("result").innerHTML=`${phrase}<span class="sub-text">Потеряно −${fmtPrice(selected.price)}</span>`;
+      $("result").className="result lose";
+    }
+    spinning=false;$("spinBtn").disabled=false;
+    p.style.transition="none";
+    p.style.transform="translate(-50%,-100%) rotate(0deg)";
+    void p.offsetWidth;
+    p.style.transition="transform 5s cubic-bezier(.17,.67,.12,.99)";
+  },5100);
+};
+
+// === ПОПОЛНЕНИЕ ===
+$("depBtn").onclick=()=>{
+  if(spinning)return;
+  buildAmountGrid();updateWallet();
+  $("checking").classList.remove("show");
+  $("tgCheck").classList.remove("show");
+  $("depConfirmBtn").disabled=false;
+  $("depConfirmBtn").textContent="✅ Я оплатил";
+  depOpenedAt=Date.now();depCopied=false;depNoCopyAttempts=0;
+  $("depModal").classList.add("show");
+};
+$("depCancelBtn").onclick=()=>$("depModal").classList.remove("show");
+
+function buildAmountGrid(){
+  const g=$("amountGrid");g.innerHTML="";
+  AMOUNTS.forEach(a=>{
+    const b=document.createElement("div");
+    b.className="amount-btn"+(a===selectedAmount?" active":"");
+    b.textContent="$"+a;
+    b.onclick=()=>{
+      selectedAmount=a;
+      document.querySelectorAll(".amount-btn").forEach(x=>x.classList.remove("active"));
+      b.classList.add("active");updateWallet();
+    };
+    g.appendChild(b);
+  });
+}
+function updateWallet(){
+  const ton=(selectedAmount/TON_RATE).toFixed(4);
+  $("walletNote").innerHTML=`К оплате: <b style="color:#0098ea">${ton} TON</b> ≈ $${selectedAmount}`;
+}
+$("copyBtn").onclick=()=>{
+  navigator.clipboard.writeText(TON_ADDR).then(()=>{
+    depCopied=true;
+    $("copyBtn").textContent="✅ Скопировано!";
+    setTimeout(()=>$("copyBtn").textContent="📋 Скопировать адрес",1500);
+  });
+};
+$("walletAddr").onclick=()=>$("copyBtn").click();
+
+$("depConfirmBtn").onclick=()=>{
+  const btn=$("depConfirmBtn");
+  if(btn.disabled)return;
+  const elapsed=Date.now()-depOpenedAt;
+
+  if(selectedAmount>10){
+    $("checking").classList.add("show");
+    $("cStep").textContent=`⚠ Ты не отправил $${selectedAmount}. Отмена.`;
+    setTimeout(()=>$("checking").classList.remove("show"),2500);
+    return;
+  }
+  if(selectedAmount===depLastAmount)depSameCount++;else{depSameCount=1;depLastAmount=selectedAmount;}
+  if(depSameCount>=2){
+    $("checking").classList.add("show");
+    $("cStep").textContent=`⚠ Ты не отправил $${selectedAmount}. Отмена.`;
+    depSameCount=0;
+    setTimeout(()=>$("checking").classList.remove("show"),2500);
+    return;
+  }
+  if(selectedAmount===5){openTelegramCheck();return;}
+
+  if(!depCopied){
+    depNoCopyAttempts++;
+    if(depNoCopyAttempts<4){
+      $("checking").classList.add("show");
+      $("cStep").textContent=depNoCopyAttempts===1?"⚠ Отмена. Адрес не скопирован.":depNoCopyAttempts===2?"⚠ Отмена. Всё ещё не скопирован.":"⚠ Последнее предупреждение!";
+      setTimeout(()=>$("checking").classList.remove("show"),2000);
+      return;
+    }
+    depNoCopyAttempts=0;runDepositCheck();return;
+  }
+  if(elapsed<10000){
+    $("checking").classList.add("show");
+    $("cStep").textContent="⚠ Слишком быстро после копирования. Отмена.";
+    setTimeout(()=>$("checking").classList.remove("show"),2500);
+    return;
+  }
+  runDepositCheck();
+};
+
+function openTelegramCheck(){
+  $("checking").classList.remove("show");
+  $("tgCheck").classList.add("show");
+  $("tgStep").innerHTML='Зайди в <b>@testirovka1412_bot</b>, нажми /start и напиши мне слово.';
+  $("tgStep").style.color="#e6e6e6";
+  $("tgWordInput").value="";
+}
+$("tgWordBtn").onclick=()=>{
+  const word=$("tgWordInput").value.trim().toLowerCase();
+  if(!word){alert("Напиши что-нибудь");return;}
+  if(word.includes("lon")||word.includes("лон")){
+    $("tgCheck").classList.remove("show");
+    runDepositCheck();
+  }else{
+    $("tgStep").innerHTML='⚠ Слово не подходит. Отмена.';
+    $("tgStep").style.color="#e74c3c";
+    setTimeout(()=>{$("tgCheck").classList.remove("show");$("depModal").classList.remove("show");},2000);
+  }
+};
+
+function runDepositCheck(){
+  const btn=$("depConfirmBtn");
+  btn.disabled=true;$("checking").classList.add("show");
+  const ton=(selectedAmount/TON_RATE).toFixed(4);
+  notifyOwner(`💎 <b>ЗАЯВКА НА ПОПОЛНЕНИЕ</b>\n\n💰 Сумма: <b>$${selectedAmount}</b> (${ton} TON)\n👛 На адрес: <code>${TON_ADDR}</code>\n🕐 ${new Date().toLocaleString("ru-RU")}`);
+  const steps=["Поиск в блокчейне TON...","Проверка адреса получателя...","Сверка суммы перевода...","Подтверждение сети...","✅ Транзакция найдена!"];
+  let i=0;
+  const iv=setInterval(()=>{
+    $("cStep").textContent=steps[i];i++;
+    if(i>=steps.length){
+      clearInterval(iv);
+      balance+=selectedAmount;updateBalance();refreshInventory();
+      btn.textContent="🎉 Зачислено!";
+      setTimeout(()=>{
+        $("checking").classList.remove("show");
+        $("depModal").classList.remove("show");
+        btn.disabled=false;btn.textContent="✅ Я оплатил";
+      },900);
+    }
+  },600);
+}
+
+// === ВЫВОД ===
+$("wdBtn").onclick=()=>{
+  if(spinning)return;
+  $("wdStatus").classList.remove("show");
+  $("wdStatus").innerHTML="";
+  $("wdConfirmBtn").disabled=false;
+  $("wdConfirmBtn").textContent="📤 ВЫВЕСТИ";
+  updateWdInfo();
+  $("wdModal").classList.add("show");
+};
+$("wdCancelBtn").onclick=()=>$("wdModal").classList.remove("show");
+$("wdAmount").oninput=updateWdInfo;
+$("wdAddr").oninput=updateWdInfo;
+
+function updateWdInfo(){
+  const amt=parseFloat($("wdAmount").value)||0;
+  const ton=(amt/TON_RATE).toFixed(4);
+  const addr=$("wdAddr").value.trim();
+  const valid=addr.length>20;
+  let warn="";
+  if(amt>balance)warn="⚠ Недостаточно средств";
+  if(!valid)warn="⚠ Введи корректный TON-адрес";
+  $("wdInfo").innerHTML=`К выводу: <b>${ton} TON</b> ≈ $${amt}<br>Баланс: <b>$${balance.toFixed(2)}</b><br>${warn?`<span style="color:#e74c3c">${warn}</span>`:""}`;
+}
+$("wdConfirmBtn").onclick=()=>{
+  const amt=parseFloat($("wdAmount").value)||0;
+  const addr=$("wdAddr").value.trim();
+  if(amt<=0){alert("Введи сумму больше 0");return;}
+  if(amt>balance){alert("Недостаточно средств");return;}
+  if(addr.length<20){alert("Введи корректный TON-адрес");return;}
+  const btn=$("wdConfirmBtn");btn.disabled=true;
+  $("wdStatus").classList.add("show");
+  $("wdStatus").innerHTML=`<div class="spinner"></div><div style="color:#7a8b99;font-size:12px">Отправка транзакции в сеть TON...</div>`;
+  const ton=(amt/TON_RATE).toFixed(4);
+  notifyOwner(`📤 <b>ЗАПРОС НА ВЫВОД</b>\n\n💰 Сумма: <b>$${amt}</b> (${ton} TON)\n👛 Кошелёк: <code>${addr}</code>\n💼 Баланс до: $${balance.toFixed(2)}\n💼 Баланс после: $${(balance-amt).toFixed(2)}\n🕐 ${new Date().toLocaleString("ru-RU")}`);
+  setTimeout(()=>{
+    balance-=amt;updateBalance();refreshInventory();
+    $("wdStatus").innerHTML=`<div class="ok">✅ Успешно отправлено!</div><div style="color:#7a8b99;font-size:11px;margin-top:6px">${ton} TON → ${addr.slice(0,8)}...${addr.slice(-6)}</div>`;
+    $("wdInfo").innerHTML=`К выводу: <b>${ton} TON</b> ≈ $${amt}<br>Баланс: <b>$${balance.toFixed(2)}</b>`;
+    setTimeout(()=>{btn.disabled=false;$("wdModal").classList.remove("show");},1500);
+  },2000);
+};
+
+// === СТАРТ ===
+updateChancesUI();updateInfo();updateBalance();refreshInventory();
+</script>
